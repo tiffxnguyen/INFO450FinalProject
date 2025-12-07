@@ -69,32 +69,46 @@ else:
         st.dataframe(df_clean.head(), use_container_width=True)
 
     # ----------------------------------------------------------------
-    # --- REQUIRED CHART 1: Histogram of Repair Amount ---
-    # ----------------------------------------------------------------
-    st.subheader("Distribution of Repair Amount")
-    
-    # Create the Plotly figure
-    fig_hist = px.histogram(
-        df_clean.dropna(subset=['repairAmount']), # Drop NaN for the chart
-        x="repairAmount", 
-        nbins=50, 
-        title="Distribution of Repair Amounts (Logarithmic Scale)",
-        labels={"repairAmount": "Repair Amount ($)"}
-    )
-    fig_hist.update_xaxes(type='log') # Apply log scale as you did in Colab
+# --- REQUIRED CHART 1: Histogram of Repair Amount ---
+# ----------------------------------------------------------------
+st.subheader("Distribution of Repair Amount")
 
-    # Display the chart in Streamlit
-    st.plotly_chart(fig_hist, use_container_width=True)
+# --- START OF DEBUG CHECK INSERTION ---
+data_for_hist = df_clean.dropna(subset=['repairAmount'])
+valid_count = len(data_for_hist)
 
-    # Brief Written Insight
-    st.markdown(
-        """
-        **Insight:** The histogram for repairAmount shows a  right-skewed distribution. The x-axis has a long tail extending to higher values, indicating that most repair amounts are low. This means that while many registrants require smaller repair amounts, a few cases involve significantly higher costs. Most of the data is concentrated at the lower end of the repair cost spectrum.
-        """
-    )
+if valid_count == 0:
+    st.error("Error: The 'repairAmount' column contains zero valid (non-missing) entries. The plot will be empty.")
+    # Stop processing the chart if there's no data
+    st.markdown("---") 
+    st.warning("Check your `load_and_clean_data` function for issues with converting data to numeric.")
+else:
+    st.info(f"Successfully found **{valid_count}** valid entries for the histogram. If the chart is still empty, the **log scale** is likely the problem.")
+# --- END OF DEBUG CHECK INSERTION ---
 
-    st.markdown("---")
+# Create the Plotly figure
+fig_hist = px.histogram(
+    data_for_hist, # Use the checked variable
+    x="repairAmount", 
+    nbins=50, 
+    title="Distribution of Repair Amounts (Logarithmic Scale)",
+    labels={"repairAmount": "Repair Amount ($)"}
+)
 
+# Temporarily comment out the log scale line to see if the data appears
+fig_hist.update_xaxes(type='log') # <--- Try commenting this line out first!
+
+# Display the chart in Streamlit
+st.plotly_chart(fig_hist, use_container_width=True)
+
+# Brief Written Insight
+st.markdown(
+    """
+    **Insight:** The distribution of repair amounts is highly **right-skewed** with a long tail towards high values. 
+    The logarithmic scale confirms that the majority of claims are concentrated at the lower end of the cost spectrum, 
+    with only a few cases involving significantly higher repair amounts.
+    """
+)
     # ----------------------------------------------------------------
     # --- REQUIRED CHART 2: Boxplot of Repair Amount by TSA Eligibility ---
     # ----------------------------------------------------------------
@@ -117,7 +131,9 @@ else:
     
     # Brief Written Insight
     st.markdown(
-        """
-        **Insight:** The box plot shows the distribution of repairAmount across various residence types. There are differences in median repair amounts and the spread of values among different residence types. For example, House/Duplex shows a broader range of repair amounts and a higher median compared to Apartment or Condo, which might have more standardized repair needs. Mobile Home also show distinct repair cost patterns.
+       """
+        **Insight:** This boxplot compares the repair cost patterns for individuals who were TSA eligible (1) versus those who were not (0). 
+        Typically, a visible difference in the median (the line inside the box) and interquartile range (the box height) suggests that the eligibility the 
+        status is related to the magnitude of the damage.
         """
     )
