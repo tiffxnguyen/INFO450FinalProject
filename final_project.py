@@ -90,9 +90,7 @@ else:
     # Brief Written Insight
     st.markdown(
         """
-        **Insight:** The distribution of repair amounts is highly **right-skewed** (a long tail towards high values). 
-        The logarithmic scale confirms that the majority of claims are concentrated at the lower end of the cost spectrum, 
-        with only a few cases involving significantly higher repair amounts.
+        **Insight:** The histogram for repairAmount shows a  right-skewed distribution. The x-axis has a long tail extending to higher values, indicating that most repair amounts are low. This means that while many registrants require smaller repair amounts, a few cases involve significantly higher costs. Most of the data is concentrated at the lower end of the repair cost spectrum.
         """
     )
 
@@ -121,8 +119,6 @@ else:
     # Brief Written Insight
     st.markdown(
         """
-        **Insight:** This boxplot visually compares the repair cost patterns for individuals who were TSA eligible (1) versus those who were not (0). 
-        Typically, a visible difference in the **median** (the line inside the box) and **interquartile range** (the box height) suggests that the eligibility 
-        status is related to the magnitude or pattern of the damage.
+        **Insight:** The box plot shows the distribution of repairAmount across various residence types. There are differences in median repair amounts and the spread of values among different residence types. For example, House/Duplex shows a broader range of repair amounts and a higher median compared to Apartment or Condo, which might have more standardized repair needs. Mobile Home also show distinct repair cost patterns.
         """
     )
