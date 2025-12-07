@@ -16,7 +16,7 @@ url = "https://storage.googleapis.com/info_450/IndividualAssistanceHousingRegist
 filename = "fema_disaster_data.csv"
 
 start = time.time()
-print(f"Downloading {filename}...")
+st.write(f"Downloading {filename}...")
 urllib.request.urlretrieve(url, filename)
 
 import pandas as pd
@@ -49,8 +49,8 @@ df_clean = standardize_binary_col(df_clean, 'destroyed', {'yes':1, 'Yes':1, 'Y':
 
 relevant = ['tsaEligible', 'repairAmount', 'grossIncome', 'residenceType', 'damagedStateAbbreviation']
 missing_summary = df_clean[relevant].isna().sum()
-print("Missing values summary after initial cleaning:")
-display(missing_summary)
+st.write("Missing values summary after initial cleaning:")
+st.dataframe(missing_summary)
 
 # Crosstab
 ct_residence = pd.crosstab(df_clean['residenceType'], df_clean['tsaEligible'], normalize='index').fillna(0)
@@ -126,12 +126,12 @@ def get_ci(series):
 mean_yes, ci_yes = get_ci(tsa_yes.dropna())
 mean_no, ci_no = get_ci(tsa_no.dropna())
 
-print("95% Confidence Intervals")
-print(f"TSA Eligible Mean Repair Amount: ${mean_yes:.2f}")
-print(f"95% CI: {ci_yes}")
+st.write("95% Confidence Intervals")
+st.write(f"TSA Eligible Mean Repair Amount: ${mean_yes:.2f}")
+st.write(f"95% CI: {ci_yes}")
 
-print(f"\nNot TSA Eligible Mean Repair Amount: ${mean_no:.2f}")
-print(f"95% CI: {ci_no}")
+st.write(f"\nNot TSA Eligible Mean Repair Amount: ${mean_no:.2f}")
+st.write(f"95% CI: {ci_no}")
 
 state1 = "FL"
 state2 = "TX"
@@ -142,9 +142,9 @@ s2 = df_clean[df_clean['damagedStateAbbreviation'] == state2]['repairAmount']
 mean_s1, ci_s1 = get_ci(s1.dropna())
 mean_s2, ci_s2 = get_ci(s2.dropna())
 
-print("\nState Comparison")
-print(f"{state1} Mean Repair Amount = ${mean_s1:.2f}, 95% CI = {ci_s1}")
-print(f"{state2} Mean Repair Amount = ${mean_s2:.2f}, 95% CI = {ci_s2}")
+st.write("\nState Comparison")
+st.write(f"{state1} Mean Repair Amount = ${mean_s1:.2f}, 95% CI = {ci_s1}")
+st.write(f"{state2} Mean Repair Amount = ${mean_s2:.2f}, 95% CI = {ci_s2}")
 
 # TSA t-test
 t_tsa, p_tsa = stats.ttest_ind(tsa_yes.dropna(), tsa_no.dropna(), equal_var=False)
@@ -152,13 +152,13 @@ t_tsa, p_tsa = stats.ttest_ind(tsa_yes.dropna(), tsa_no.dropna(), equal_var=Fals
 # State t-test
 t_state, p_state = stats.ttest_ind(s1.dropna(), s2.dropna(), equal_var=False)
 
-print("\nHypothesis Tests")
+st.write("\nHypothesis Tests")
 
-print("\nTSA Eligible vs Non-Eligible (Repair Amount)")
-print(f"T-statistic = {t_tsa:.3f}, p-value = {p_tsa:.4f}")
+st.write("\nTSA Eligible vs Non-Eligible (Repair Amount)")
+st.write(f"T-statistic = {t_tsa:.3f}, p-value = {p_tsa:.4f}")
 
-print(f"\n{state1} vs {state2} (Repair Amount)")
-print(f"T-statistic = {t_state:.3f}, p-value = {p_state:.4f}")
+st.write(f"\n{state1} vs {state2} (Repair Amount)")
+st.write(f"T-statistic = {t_state:.3f}, p-value = {p_state:.4f}")
 
 """Interpretation of Inferential Statistics
 
@@ -169,7 +169,7 @@ print(f"T-statistic = {t_state:.3f}, p-value = {p_state:.4f}")
     The 95% confidence interval for the mean repair amount in Florida is approximately \[$3946.39, $4346.32\], with a mean of \$4146.36. The 95% confidence interval for the mean repair amount in Texas is approximately \[$8200.15, $8627.59\], with a mean of \$8413.87. The confidence intervals for Florida and Texas's mean repair amounts do not overlap. This means there is a significant difference with Texas having a higher mean repair amount compared to Florida.
 
 3.  Hypothesis Tests (T-tests):
-    The t-test of TSA Eligible and Non-Eligible resulted in a T-statistic of 11.284 and a p-value of 0.0000. Since the p-value is less than the typical significance level (0.05), we reject the null hypothesis. This provides evidence that there is a significant difference in the mean repair amounts between TSA-eligible and non-eligible individuals. The t-test of the two states resulted in a T-statistic of -28.587 and a p-value of 0.0000. This very low p-value means we reject the null hypothesis. There is evidence of a significant difference in the mean repair amounts between Florida and Texas.
+    The t-test for TSA Eligible and Non-Eligible yielded a T-statistic of 11.284 and a p-value of 0.0000. Since the p-value is less than the typical significance level (0.05), we reject the null hypothesis. This provides evidence that there is a significant difference in the mean repair amounts between TSA-eligible and non-eligible individuals. The t-test of the two states resulted in a T-statistic of -28.587 and a p-value of 0.0000. This very low p-value means we reject the null hypothesis. There is evidence of a significant difference in the mean repair amounts between Florida and Texas.
 
 Part 3
 """
@@ -201,25 +201,25 @@ rf = RandomForestClassifier(n_estimators=100, max_depth=8, random_state=42, n_jo
 rf.fit(X_train, y_train)
 y_pred_rf = rf.predict(X_test)
 
-print("Decision Tree Metrics:")
-display({
+st.write("Decision Tree Metrics:")
+st.dataframe({
     'accuracy': accuracy_score(y_test, y_pred_dt),
     'precision': precision_score(y_test, y_pred_dt, zero_division=0),
     'recall': recall_score(y_test, y_pred_dt, zero_division=0),
     'confusion_matrix': confusion_matrix(y_test, y_pred_dt).tolist()
 })
 
-print("\nRandom Forest Metrics:")
-display({
+st.write("\nRandom Forest Metrics:")
+st.dataframe({
     'accuracy': accuracy_score(y_test, y_pred_rf),
     'precision': precision_score(y_test, y_pred_rf, zero_division=0),
     'recall': recall_score(y_test, y_pred_rf, zero_division=0),
     'confusion_matrix': confusion_matrix(y_test, y_pred_rf).tolist()
 })
 
-print("\nRandom Forest Feature Importances:")
+st.write("\nRandom Forest Feature Importances:")
 feat_importances = dict(zip(X.columns, rf.feature_importances_))
-display(sorted(feat_importances.items(), key=lambda x: x[1], reverse=True))
+st.dataframe(sorted(feat_importances.items(), key=lambda x: x[1], reverse=True))
 
 """Model Comparison and Generalization
 
