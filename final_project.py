@@ -73,19 +73,6 @@ else:
 # ----------------------------------------------------------------
 st.subheader("Distribution of Repair Amount")
 
-# --- START OF DEBUG CHECK INSERTION ---
-data_for_hist = df_clean.dropna(subset=['repairAmount'])
-valid_count = len(data_for_hist)
-
-if valid_count == 0:
-    st.error("Error: The 'repairAmount' column contains zero valid (non-missing) entries. The plot will be empty.")
-    # Stop processing the chart if there's no data
-    st.markdown("---") 
-    st.warning("Check your `load_and_clean_data` function for issues with converting data to numeric.")
-else:
-    st.info(f"Successfully found **{valid_count}** valid entries for the histogram. If the chart is still empty, the **log scale** is likely the problem.")
-# --- END OF DEBUG CHECK INSERTION ---
-
 # Create the Plotly figure
 fig_hist = px.histogram(
     data_for_hist, # Use the checked variable
@@ -96,7 +83,7 @@ fig_hist = px.histogram(
 )
 
 # Temporarily comment out the log scale line to see if the data appears
-fig_hist.update_xaxes(type='log') # <--- Try commenting this line out first!
+# fig_hist.update_xaxes(type='log') # <--- Try commenting this line out first!
 
 # Display the chart in Streamlit
 st.plotly_chart(fig_hist, use_container_width=True)
