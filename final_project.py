@@ -55,6 +55,9 @@ for col in ['repairAmount', 'grossIncome', 'waterLevel']:
 df_clean = standardize_binary_col(df_clean, 'tsaEligible')
 df_clean = standardize_binary_col(df_clean, 'destroyed', {'yes':1, 'Yes':1, 'Y':1, 'No':0, 'no':0, 'N':0})
 
+st.write("Columns in df_clean:", df_clean.columns.tolist())
+st.write("Number of rows:", len(df_clean))
+
 # --- Missing Values Summary ---
 possible_cols = ['tsaEligible', 'repairAmount', 'grossIncome', 'residenceType', 'damagedStateAbbreviation']
 relevant = [col for col in possible_cols if col in df_clean.columns]
