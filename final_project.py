@@ -90,36 +90,11 @@ fig_hist = px.histogram(
     labels={"repairAmount": "Repair Amount ($)"}
 )
 
-# Display the linear scale plot
-st.markdown("#### Linear Scale View (Includes Zeroes)")
-st.plotly_chart(fig_hist, use_container_width=True)
-
-# --- Create and display a second, Log-Scale plot for non-zero data ---
-data_for_log_hist = data_for_hist[data_for_hist['repairAmount'] > 0]
-non_zero_count = len(data_for_log_hist)
-
-if non_zero_count > 0:
-    st.markdown("#### Log Scale View (Excludes Zeroes to better show spread)")
-    
-    fig_log_hist = px.histogram(
-        data_for_log_hist,
-        x="repairAmount",
-        nbins=50,
-        title=f"Distribution of Non-Zero Repair Amounts (N={non_zero_count})",
-        labels={"repairAmount": "Repair Amount ($)"}
-    )
-    fig_log_hist.update_xaxes(type='log')
-    st.plotly_chart(fig_log_hist, use_container_width=True)
-else:
-    st.info("No non-zero repair amounts found to display the log-scale histogram.")
-
-
 # Brief Written Insight (Adjusted for dual view)
 st.markdown(
     """
-    **Insight:** The linear view confirms a large concentration of zero or very low repair amounts. 
-    The log view (which excludes zeroes) spreads out the higher-value claims, clearly showing the long tail 
-    of costs where only a few cases involve significantly higher repair amounts.
+    **Insight:** The distribution of repair amounts is highly right-skewed with a long tail towards high values. 
+    The logarithmic scale confirms that the majority of claims are concentrated at the lower end of the cost spectrum.
     """
 )
 
