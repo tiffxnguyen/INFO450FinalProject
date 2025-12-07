@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -13,9 +12,10 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
 
+# --- Title ---
 st.title("FEMA Disaster Relief Dashboard")
 
-# --- Download data if not exists ---
+# --- Download dataset if not exists ---
 url = "https://storage.googleapis.com/info_450/IndividualAssistanceHousingRegistrantsLargeDisasters%20(1).csv"
 filename = "fema_disaster_data.csv"
 
@@ -28,7 +28,7 @@ if not os.path.exists(filename):
 # --- Load dataset ---
 df = pd.read_csv(filename, nrows=300000)
 
-# --- Clean data ---
+# --- Data Cleaning ---
 df_clean = df.copy()
 df_clean.columns = df_clean.columns.str.strip()
 
@@ -46,9 +46,15 @@ for col in ['repairAmount', 'grossIncome', 'waterLevel']:
 df_clean = standardize_binary_col(df_clean, 'tsaEligible')
 df_clean = standardize_binary_col(df_clean, 'destroyed', {'yes':1, 'Yes':1, 'Y':1, 'No':0, 'no':0, 'N':0})
 
-# --- Data preview ---
+# --- Missing Values Summary ---
+st.subheader("Missing Values Summary for Relevant Columns")
+relevant = ['tsaEligible', 'repairAmount', 'grossIncome', 'residenceType', 'damagedStateAbbreviation']
+missing_summary = df_clean[relevant].isna().sum()
+st.dataframe(missing_summary)
+
+# --- Data Preview ---
 st.subheader("Data Preview")
-st.write(df_clean.head())
+st.dataframe(df_clean.head())
 
 # --- Charts ---
 st.subheader("Top 30 States by TSA Eligibility Rate")
@@ -76,10 +82,10 @@ income_rates = pd.crosstab(df_bin['income_bin'], df_bin['tsaEligible'], normaliz
 fig_income = px.bar(income_rates, x='income_bin', y='eligible', title='TSA Eligibility Rate by Income Quintile')
 st.plotly_chart(fig_income)
 
-# --- Inferential Stats ---
-st.subheader("TSA Eligible vs Non-Eligible Repair Amount")
-tsa_yes = df_clean[df_clean['tsaEligible'] == 1]['repairAmount'].dropna()
-tsa_no = df_clean[df_clean['tsaEligible'] == 0]['repairAmount'].dropna()
+# --- Inferential Statistics ---
+st.subheader("TSA Eligible vs Non-Eligible Repair Amounts")
+tsa_yes = df_clean[df_clean['tsaEligible']==1]['repairAmount'].dropna()
+tsa_no = df_clean[df_clean['tsaEligible']==0]['repairAmount'].dropna()
 
 def get_ci(series):
     mean = series.mean()
