@@ -68,7 +68,7 @@ else:
     with st.expander("Data Preview"):
         st.dataframe(df_clean.head(), use_container_width=True)
 
-    # ----------------------------------------------------------------
+# ----------------------------------------------------------------
 # --- REQUIRED CHART 1: Histogram of Repair Amount ---
 # ----------------------------------------------------------------
 st.subheader("Distribution of Repair Amount")
@@ -109,22 +109,22 @@ st.markdown(
     with only a few cases involving significantly higher repair amounts.
     """
 )
-    # ----------------------------------------------------------------
-    # --- REQUIRED CHART 2: Boxplot of Repair Amount by TSA Eligibility ---
-    # ----------------------------------------------------------------
-    st.subheader("Repair Amount by TSA Eligibility")
+# ----------------------------------------------------------------
+# --- REQUIRED CHART 2: Boxplot of Repair Amount by TSA Eligibility ---
+# ----------------------------------------------------------------
+st.subheader("Repair Amount by TSA Eligibility")
 
-    # Create the Plotly figure
-    fig_box = px.box(
-        df_clean.dropna(subset=['tsaEligible', 'repairAmount']), # Drop NaN for the chart
-        x="tsaEligible", 
-        y="repairAmount",
-        title="Repair Amount Distribution by TSA Eligibility",
-        labels={
-            "tsaEligible": "TSA Eligible (1=Yes, 0=No)",
-            "repairAmount": "Repair Amount ($)"
-        }
-    )
+# Create the Plotly figure
+fig_box = px.box(
+    df_clean.dropna(subset=['tsaEligible', 'repairAmount']), # Drop NaN for the chart
+    x="tsaEligible", 
+    y="repairAmount",
+    title="Repair Amount Distribution by TSA Eligibility",
+    labels={
+        "tsaEligible": "TSA Eligible (1=Yes, 0=No)",
+        "repairAmount": "Repair Amount ($)"
+    }
+)
 
     # Display the chart in Streamlit
     st.plotly_chart(fig_box, use_container_width=True)
