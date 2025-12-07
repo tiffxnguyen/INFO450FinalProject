@@ -61,12 +61,7 @@ st.title("🏠 FEMA Disaster Relief Dashboard")
 # Load the cached, cleaned data
 df_clean = load_and_clean_data(URL, FILENAME, N_ROWS)
 
-if df_clean.empty:
-    st.error("Data could not be loaded or cleaned. Check the file source.")
-else:
-    # --- Data Preview (Optional but helpful for debugging) ---
-    with st.expander("Data Preview"):
-        st.dataframe(df_clean.head(), use_container_width=True)
+
 
 # ----------------------------------------------------------------
 # --- REQUIRED CHART 1: Histogram of Repair Amount ---
