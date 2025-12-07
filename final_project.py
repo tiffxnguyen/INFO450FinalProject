@@ -57,7 +57,6 @@ def load_and_clean_data(url, filename, nrows):
 # --- Streamlit App Layout ---
 
 st.title("🏠 FEMA Disaster Relief Dashboard")
-st.markdown("Analyzing FEMA Individual Assistance Housing Registrants data.")
 
 # Load the cached, cleaned data
 df_clean = load_and_clean_data(URL, FILENAME, N_ROWS)
