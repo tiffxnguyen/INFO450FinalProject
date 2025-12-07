@@ -32,7 +32,7 @@ if not os.path.exists(filename):
     st.success(f"Downloaded {filename} in {time.time() - start:.2f} seconds!")
 
 # --- Load Data ---
-df = pd.read_csv(filename, nrows=300000)
+df = pd.read_csv(filename, nrows=100000)
 
 st.subheader("Data Preview")
 st.dataframe(df.head())
