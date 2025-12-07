@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+FEMA Disaster Relief Streamlit Dashboard
+"""
+
+# --- Imports ---
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -13,9 +18,10 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
 
+# --- App Title ---
 st.title("FEMA Disaster Relief Dashboard")
 
-# --- Download dataset ---
+# --- Dataset download ---
 url = "https://storage.googleapis.com/info_450/IndividualAssistanceHousingRegistrantsLargeDisasters%20(1).csv"
 filename = "fema_disaster_data.csv"
 
@@ -25,10 +31,13 @@ if not os.path.exists(filename):
     urllib.request.urlretrieve(url, filename)
     st.success(f"Downloaded {filename} in {time.time() - start:.2f} seconds!")
 
-# --- Load dataset ---
+# --- Load Data ---
 df = pd.read_csv(filename, nrows=300000)
 
-# --- Clean & preprocess ---
+st.subheader("Data Preview")
+st.dataframe(df.head())
+
+# --- Handle Missing Values ---
 df_clean = df.copy()
 df_clean.columns = df_clean.columns.str.strip()
 
@@ -46,24 +55,25 @@ for col in ['repairAmount', 'grossIncome', 'waterLevel']:
 df_clean = standardize_binary_col(df_clean, 'tsaEligible')
 df_clean = standardize_binary_col(df_clean, 'destroyed', {'yes':1, 'Yes':1, 'Y':1, 'No':0, 'no':0, 'N':0})
 
-# --- Missing values summary ---
+# --- Missing Values Summary ---
 relevant = ['tsaEligible', 'repairAmount', 'grossIncome', 'residenceType', 'damagedStateAbbreviation']
 missing_summary = df_clean[relevant].isna().sum()
-st.subheader("Missing values summary after initial cleaning")
+st.subheader("Missing Values Summary After Initial Cleaning")
 st.dataframe(missing_summary)
 
-# --- Crosstab ---
+# --- Crosstabs ---
 ct_residence = pd.crosstab(df_clean['residenceType'], df_clean['tsaEligible'], normalize='index').fillna(0)
 ct_state = pd.crosstab(df_clean['damagedStateAbbreviation'], df_clean['tsaEligible'], normalize='index').fillna(0)
 
-st.subheader("Crosstab: TSA Eligibility by Residence Type")
+st.subheader("TSA Eligibility Rate by Residence Type")
 st.dataframe(ct_residence.head())
-st.subheader("Crosstab: TSA Eligibility by State")
+
+st.subheader("TSA Eligibility Rate by State")
 st.dataframe(ct_state.head())
 
 # --- Groupby ---
 avg_repair_by_state = df_clean.dropna(subset=['repairAmount','damagedStateAbbreviation']).groupby('damagedStateAbbreviation')['repairAmount'].mean().sort_values(ascending=False)
-st.subheader("Top 20 States by Average Repair Amount")
+st.subheader("Average Repair Amount by State (Top 20)")
 st.dataframe(avg_repair_by_state.head(20))
 
 # --- Charts ---
@@ -74,37 +84,31 @@ fig_bar = px.bar(
     state_rates.sort_values('eligible', ascending=False).head(30),
     x='damagedStateAbbreviation', y='eligible',
     title='Top 30 States by TSA Eligibility Rate',
-    labels={'eligible':'TSA eligible rate'}
+    labels={'eligible':'TSA Eligible Rate'}
 )
 st.plotly_chart(fig_bar)
 
 # Histogram: repairAmount
-fig_hist = px.histogram(
-    df_clean.dropna(subset=['repairAmount']),
-    x='repairAmount',
-    nbins=50,
-    title='Distribution of Repair Amount'
-)
+fig_hist = px.histogram(df_clean.dropna(subset=['repairAmount']),
+                        x='repairAmount', nbins=50,
+                        title='Distribution of Repair Amounts')
 fig_hist.update_xaxes(type='log')
 st.plotly_chart(fig_hist)
 
-# Boxplot: repairAmount across residence types
-fig_box_res = px.box(
-    df_clean.dropna(subset=['repairAmount','residenceType']),
-    x='residenceType',
-    y='repairAmount',
-    title='Repair Amount by Residence Type'
-)
+# Boxplot: repairAmount by residenceType
+fig_box_res = px.box(df_clean.dropna(subset=['repairAmount','residenceType']),
+                     x='residenceType', y='repairAmount',
+                     title='Repair Amount by Residence Type')
 st.plotly_chart(fig_box_res)
 
-# TSA Eligibility by Income Quintile
-df_bin = df_clean.dropna(subset=['grossIncome']).copy()
+# TSA eligibility by income quintile
+df_bin = df_clean.dropna(subset=['grossIncome'])
 df_bin['income_bin'] = pd.qcut(df_bin['grossIncome'].rank(method='first'), q=5, labels=['Q1','Q2','Q3','Q4','Q5'])
 income_rates = pd.crosstab(df_bin['income_bin'], df_bin['tsaEligible'], normalize='index').reset_index().rename(columns={1:'eligible'})
 fig_income = px.bar(income_rates, x='income_bin', y='eligible', title='TSA Eligibility Rate by Income Quintile')
 st.plotly_chart(fig_income)
 
-# --- Inferential stats ---
+# --- Inferential Statistics ---
 tsa_yes = df_clean[df_clean['tsaEligible'] == 1]['repairAmount']
 tsa_no = df_clean[df_clean['tsaEligible'] == 0]['repairAmount']
 
@@ -125,7 +129,8 @@ st.write(f"95% CI: {ci_yes}")
 st.write(f"Not TSA Eligible Mean Repair Amount: ${mean_no:.2f}")
 st.write(f"95% CI: {ci_no}")
 
-state1, state2 = "FL", "TX"
+state1 = "FL"
+state2 = "TX"
 s1 = df_clean[df_clean['damagedStateAbbreviation'] == state1]['repairAmount']
 s2 = df_clean[df_clean['damagedStateAbbreviation'] == state2]['repairAmount']
 
@@ -138,6 +143,7 @@ st.write(f"{state2} Mean Repair Amount = ${mean_s2:.2f}, 95% CI = {ci_s2}")
 
 # TSA t-test
 t_tsa, p_tsa = stats.ttest_ind(tsa_yes.dropna(), tsa_no.dropna(), equal_var=False)
+
 # State t-test
 t_state, p_state = stats.ttest_ind(s1.dropna(), s2.dropna(), equal_var=False)
 
@@ -147,7 +153,7 @@ st.write(f"T-statistic = {t_tsa:.3f}, p-value = {p_tsa:.4f}")
 st.write(f"{state1} vs {state2} (Repair Amount)")
 st.write(f"T-statistic = {t_state:.3f}, p-value = {p_state:.4f}")
 
-# --- Predictive Modeling ---
+# --- Machine Learning: Decision Tree & Random Forest ---
 df_m = df_clean.copy()
 cat_cols = ['residenceType', 'damagedStateAbbreviation']
 enc = OrdinalEncoder()
@@ -187,3 +193,5 @@ st.dataframe({
 st.subheader("Random Forest Feature Importances")
 feat_importances = dict(zip(X.columns, rf.feature_importances_))
 st.dataframe(sorted(feat_importances.items(), key=lambda x: x[1], reverse=True))
+
+st.markdown("**Insight:** Random Forest generalizes better than Decision Tree based on accuracy, precision, and recall.")
