@@ -127,10 +127,10 @@ fig_box = px.box(
 )
 
     # Display the chart in Streamlit
-    st.plotly_chart(fig_box, use_container_width=True)
+st.plotly_chart(fig_box, use_container_width=True)
     
     # Brief Written Insight
-    st.markdown(
+st.markdown(
        """
         **Insight:** This boxplot compares the repair cost patterns for individuals who were TSA eligible (1) versus those who were not (0). 
         Typically, a visible difference in the median (the line inside the box) and interquartile range (the box height) suggests that the eligibility the 
