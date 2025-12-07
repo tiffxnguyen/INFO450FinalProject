@@ -83,7 +83,7 @@ fig_hist = px.histogram(
 )
 
 # Temporarily comment out the log scale line to see if the data appears
-# fig_hist.update_xaxes(type='log') # <--- Try commenting this line out first!
+# fig_hist.update_xaxes(type='log')
 
 # Display the chart in Streamlit
 st.plotly_chart(fig_hist, use_container_width=True)
