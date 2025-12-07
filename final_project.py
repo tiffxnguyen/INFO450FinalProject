@@ -275,7 +275,7 @@ if not os.path.exists(filename):
     st.success(f"Downloaded {filename} in {time.time() - start:.2f} seconds!")
 
 # Load the dataset
-df = pd.read_csv("/content/fema_disaster_data.csv", nrows=300000)
+df = pd.read_csv(filename, nrows=300000)
 
 # --- Data preview ---
 st.subheader("Data Preview")
