@@ -20,7 +20,7 @@ print(f"Downloading {filename}...")
 urllib.request.urlretrieve(url, filename)
 
 import pandas as pd
-df = pd.read_csv("/content/fema_disaster_data.csv", nrows=300000)
+df = pd.read_csv(filename, nrows=300000)
 df.info()
 df.head()
 
