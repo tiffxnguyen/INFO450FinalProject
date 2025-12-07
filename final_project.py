@@ -56,20 +56,31 @@ df_clean = standardize_binary_col(df_clean, 'tsaEligible')
 df_clean = standardize_binary_col(df_clean, 'destroyed', {'yes':1, 'Yes':1, 'Y':1, 'No':0, 'no':0, 'N':0})
 
 # --- Missing Values Summary ---
-relevant = ['tsaEligible', 'repairAmount', 'grossIncome', 'residenceType', 'damagedStateAbbreviation']
-missing_summary = df_clean[relevant].isna().sum()
-st.subheader("Missing Values Summary After Initial Cleaning")
-st.dataframe(missing_summary)
+possible_cols = ['tsaEligible', 'repairAmount', 'grossIncome', 'residenceType', 'damagedStateAbbreviation']
+relevant = [col for col in possible_cols if col in df_clean.columns]
+
+if relevant:
+    missing_summary = df_clean[relevant].isna().sum()
+    st.subheader("Missing Values Summary After Initial Cleaning")
+    st.dataframe(missing_summary)
+else:
+    st.warning("None of the expected columns for missing value summary exist in the dataset.")
 
 # --- Crosstabs ---
-ct_residence = pd.crosstab(df_clean['residenceType'], df_clean['tsaEligible'], normalize='index').fillna(0)
-ct_state = pd.crosstab(df_clean['damagedStateAbbreviation'], df_clean['tsaEligible'], normalize='index').fillna(0)
+if 'residenceType' in df_clean.columns and 'tsaEligible' in df_clean.columns:
+    ct_residence = pd.crosstab(df_clean['residenceType'], df_clean['tsaEligible'], normalize='index').fillna(0)
+    st.subheader("TSA Eligibility Rate by Residence Type")
+    st.dataframe(ct_residence.head())
+else:
+    st.warning("Columns 'residenceType' and/or 'tsaEligible' not found for residence crosstab.")
 
-st.subheader("TSA Eligibility Rate by Residence Type")
-st.dataframe(ct_residence.head())
+if 'damagedStateAbbreviation' in df_clean.columns and 'tsaEligible' in df_clean.columns:
+    ct_state = pd.crosstab(df_clean['damagedStateAbbreviation'], df_clean['tsaEligible'], normalize='index').fillna(0)
+    st.subheader("TSA Eligibility Rate by State")
+    st.dataframe(ct_state.head())
+else:
+    st.warning("Columns 'damagedStateAbbreviation' and/or 'tsaEligible' not found for state crosstab.")
 
-st.subheader("TSA Eligibility Rate by State")
-st.dataframe(ct_state.head())
 
 # --- Groupby ---
 avg_repair_by_state = df_clean.dropna(subset=['repairAmount','damagedStateAbbreviation']).groupby('damagedStateAbbreviation')['repairAmount'].mean().sort_values(ascending=False)
