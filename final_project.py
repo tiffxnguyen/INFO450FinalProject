@@ -86,7 +86,6 @@ fig_hist = px.histogram(
 )
 
 # Display the linear scale plot
-st.markdown("#### Linear Scale View (Includes Zeroes)")
 st.plotly_chart(fig_hist, use_container_width=True)
 
 # Brief Written Insight (Adjusted for dual view)
