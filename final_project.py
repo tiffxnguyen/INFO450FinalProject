@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-FEMA Disaster Relief Streamlit Dashboard
-"""
-
-# --- Imports ---
+# app.py
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -18,10 +13,9 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
 
-# --- App Title ---
 st.title("FEMA Disaster Relief Dashboard")
 
-# --- Dataset download ---
+# --- Download data if not exists ---
 url = "https://storage.googleapis.com/info_450/IndividualAssistanceHousingRegistrantsLargeDisasters%20(1).csv"
 filename = "fema_disaster_data.csv"
 
@@ -31,13 +25,10 @@ if not os.path.exists(filename):
     urllib.request.urlretrieve(url, filename)
     st.success(f"Downloaded {filename} in {time.time() - start:.2f} seconds!")
 
-# --- Load Data ---
-df = pd.read_csv(filename, nrows=100000)
+# --- Load dataset ---
+df = pd.read_csv(filename, nrows=300000)
 
-st.subheader("Data Preview")
-st.dataframe(df.head())
-
-# --- Handle Missing Values ---
+# --- Clean data ---
 df_clean = df.copy()
 df_clean.columns = df_clean.columns.str.strip()
 
@@ -55,76 +46,40 @@ for col in ['repairAmount', 'grossIncome', 'waterLevel']:
 df_clean = standardize_binary_col(df_clean, 'tsaEligible')
 df_clean = standardize_binary_col(df_clean, 'destroyed', {'yes':1, 'Yes':1, 'Y':1, 'No':0, 'no':0, 'N':0})
 
-st.write("Columns in df_clean:", df_clean.columns.tolist())
-st.write("Number of rows:", len(df_clean))
-
-# --- Missing Values Summary ---
-possible_cols = ['tsaEligible', 'repairAmount', 'grossIncome', 'residenceType', 'damagedStateAbbreviation']
-relevant = [col for col in possible_cols if col in df_clean.columns]
-
-if relevant:
-    missing_summary = df_clean[relevant].isna().sum()
-    st.subheader("Missing Values Summary After Initial Cleaning")
-    st.dataframe(missing_summary)
-else:
-    st.warning("None of the expected columns for missing value summary exist in the dataset.")
-
-# --- Crosstabs ---
-if 'residenceType' in df_clean.columns and 'tsaEligible' in df_clean.columns:
-    ct_residence = pd.crosstab(df_clean['residenceType'], df_clean['tsaEligible'], normalize='index').fillna(0)
-    st.subheader("TSA Eligibility Rate by Residence Type")
-    st.dataframe(ct_residence.head())
-else:
-    st.warning("Columns 'residenceType' and/or 'tsaEligible' not found for residence crosstab.")
-
-if 'damagedStateAbbreviation' in df_clean.columns and 'tsaEligible' in df_clean.columns:
-    ct_state = pd.crosstab(df_clean['damagedStateAbbreviation'], df_clean['tsaEligible'], normalize='index').fillna(0)
-    st.subheader("TSA Eligibility Rate by State")
-    st.dataframe(ct_state.head())
-else:
-    st.warning("Columns 'damagedStateAbbreviation' and/or 'tsaEligible' not found for state crosstab.")
-
-
-# --- Groupby ---
-avg_repair_by_state = df_clean.dropna(subset=['repairAmount','damagedStateAbbreviation']).groupby('damagedStateAbbreviation')['repairAmount'].mean().sort_values(ascending=False)
-st.subheader("Average Repair Amount by State (Top 20)")
-st.dataframe(avg_repair_by_state.head(20))
+# --- Data preview ---
+st.subheader("Data Preview")
+st.write(df_clean.head())
 
 # --- Charts ---
-# Bar chart: TSA eligibility rate by state
+st.subheader("Top 30 States by TSA Eligibility Rate")
 state_rates = pd.crosstab(df_clean['damagedStateAbbreviation'], df_clean['tsaEligible'], normalize='index').fillna(0)
 state_rates = state_rates.reset_index().rename(columns={0:'not_eligible', 1:'eligible'})
-fig_bar = px.bar(
-    state_rates.sort_values('eligible', ascending=False).head(30),
-    x='damagedStateAbbreviation', y='eligible',
-    title='Top 30 States by TSA Eligibility Rate',
-    labels={'eligible':'TSA Eligible Rate'}
-)
+fig_bar = px.bar(state_rates.sort_values('eligible', ascending=False).head(30),
+                 x='damagedStateAbbreviation', y='eligible',
+                 title='Top 30 States by TSA Eligibility Rate', labels={'eligible':'TSA eligible rate'})
 st.plotly_chart(fig_bar)
 
-# Histogram: repairAmount
-fig_hist = px.histogram(df_clean.dropna(subset=['repairAmount']),
-                        x='repairAmount', nbins=50,
-                        title='Distribution of Repair Amounts')
+st.subheader("Distribution of Repair Amount")
+fig_hist = px.histogram(df_clean.dropna(subset=['repairAmount']), x='repairAmount', nbins=50, title='Distribution of Repair Amount')
 fig_hist.update_xaxes(type='log')
 st.plotly_chart(fig_hist)
 
-# Boxplot: repairAmount by residenceType
+st.subheader("Repair Amount by Residence Type")
 fig_box_res = px.box(df_clean.dropna(subset=['repairAmount','residenceType']),
-                     x='residenceType', y='repairAmount',
-                     title='Repair Amount by Residence Type')
+                     x='residenceType', y='repairAmount', title='Repair Amount by Residence Type')
 st.plotly_chart(fig_box_res)
 
-# TSA eligibility by income quintile
+# --- TSA Eligibility by Income Quintile ---
 df_bin = df_clean.dropna(subset=['grossIncome'])
 df_bin['income_bin'] = pd.qcut(df_bin['grossIncome'].rank(method='first'), q=5, labels=['Q1','Q2','Q3','Q4','Q5'])
 income_rates = pd.crosstab(df_bin['income_bin'], df_bin['tsaEligible'], normalize='index').reset_index().rename(columns={1:'eligible'})
 fig_income = px.bar(income_rates, x='income_bin', y='eligible', title='TSA Eligibility Rate by Income Quintile')
 st.plotly_chart(fig_income)
 
-# --- Inferential Statistics ---
-tsa_yes = df_clean[df_clean['tsaEligible'] == 1]['repairAmount']
-tsa_no = df_clean[df_clean['tsaEligible'] == 0]['repairAmount']
+# --- Inferential Stats ---
+st.subheader("TSA Eligible vs Non-Eligible Repair Amount")
+tsa_yes = df_clean[df_clean['tsaEligible'] == 1]['repairAmount'].dropna()
+tsa_no = df_clean[df_clean['tsaEligible'] == 0]['repairAmount'].dropna()
 
 def get_ci(series):
     mean = series.mean()
@@ -134,40 +89,15 @@ def get_ci(series):
     ci = stats.t.interval(0.95, df=n-1, loc=mean, scale=sem)
     return mean, ci
 
-mean_yes, ci_yes = get_ci(tsa_yes.dropna())
-mean_no, ci_no = get_ci(tsa_no.dropna())
+mean_yes, ci_yes = get_ci(tsa_yes)
+mean_no, ci_no = get_ci(tsa_no)
 
-st.subheader("95% Confidence Intervals")
-st.write(f"TSA Eligible Mean Repair Amount: ${mean_yes:.2f}")
-st.write(f"95% CI: {ci_yes}")
-st.write(f"Not TSA Eligible Mean Repair Amount: ${mean_no:.2f}")
-st.write(f"95% CI: {ci_no}")
+st.write(f"TSA Eligible Mean Repair Amount: ${mean_yes:.2f}, 95% CI: {ci_yes}")
+st.write(f"Not TSA Eligible Mean Repair Amount: ${mean_no:.2f}, 95% CI: {ci_no}")
 
-state1 = "FL"
-state2 = "TX"
-s1 = df_clean[df_clean['damagedStateAbbreviation'] == state1]['repairAmount']
-s2 = df_clean[df_clean['damagedStateAbbreviation'] == state2]['repairAmount']
+# --- Predictive Modeling ---
+st.subheader("Predictive Modeling: TSA Eligibility")
 
-mean_s1, ci_s1 = get_ci(s1.dropna())
-mean_s2, ci_s2 = get_ci(s2.dropna())
-
-st.subheader("State Comparison")
-st.write(f"{state1} Mean Repair Amount = ${mean_s1:.2f}, 95% CI = {ci_s1}")
-st.write(f"{state2} Mean Repair Amount = ${mean_s2:.2f}, 95% CI = {ci_s2}")
-
-# TSA t-test
-t_tsa, p_tsa = stats.ttest_ind(tsa_yes.dropna(), tsa_no.dropna(), equal_var=False)
-
-# State t-test
-t_state, p_state = stats.ttest_ind(s1.dropna(), s2.dropna(), equal_var=False)
-
-st.subheader("Hypothesis Tests")
-st.write("TSA Eligible vs Non-Eligible (Repair Amount)")
-st.write(f"T-statistic = {t_tsa:.3f}, p-value = {p_tsa:.4f}")
-st.write(f"{state1} vs {state2} (Repair Amount)")
-st.write(f"T-statistic = {t_state:.3f}, p-value = {p_state:.4f}")
-
-# --- Machine Learning: Decision Tree & Random Forest ---
 df_m = df_clean.copy()
 cat_cols = ['residenceType', 'damagedStateAbbreviation']
 enc = OrdinalEncoder()
@@ -188,24 +118,20 @@ rf = RandomForestClassifier(n_estimators=100, max_depth=8, random_state=42, n_jo
 rf.fit(X_train, y_train)
 y_pred_rf = rf.predict(X_test)
 
-st.subheader("Decision Tree Metrics")
-st.dataframe({
-    'accuracy': [accuracy_score(y_test, y_pred_dt)],
-    'precision': [precision_score(y_test, y_pred_dt, zero_division=0)],
-    'recall': [recall_score(y_test, y_pred_dt, zero_division=0)],
-    'confusion_matrix': [confusion_matrix(y_test, y_pred_dt).tolist()]
+st.write("**Decision Tree Metrics**", {
+    'accuracy': accuracy_score(y_test, y_pred_dt),
+    'precision': precision_score(y_test, y_pred_dt, zero_division=0),
+    'recall': recall_score(y_test, y_pred_dt, zero_division=0),
+    'confusion_matrix': confusion_matrix(y_test, y_pred_dt).tolist()
 })
 
-st.subheader("Random Forest Metrics")
-st.dataframe({
-    'accuracy': [accuracy_score(y_test, y_pred_rf)],
-    'precision': [precision_score(y_test, y_pred_rf, zero_division=0)],
-    'recall': [recall_score(y_test, y_pred_rf, zero_division=0)],
-    'confusion_matrix': [confusion_matrix(y_test, y_pred_rf).tolist()]
+st.write("**Random Forest Metrics**", {
+    'accuracy': accuracy_score(y_test, y_pred_rf),
+    'precision': precision_score(y_test, y_pred_rf, zero_division=0),
+    'recall': recall_score(y_test, y_pred_rf, zero_division=0),
+    'confusion_matrix': confusion_matrix(y_test, y_pred_rf).tolist()
 })
 
-st.subheader("Random Forest Feature Importances")
+st.write("**Random Forest Feature Importances**")
 feat_importances = dict(zip(X.columns, rf.feature_importances_))
-st.dataframe(sorted(feat_importances.items(), key=lambda x: x[1], reverse=True))
-
-st.markdown("**Insight:** Random Forest generalizes better than Decision Tree based on accuracy, precision, and recall.")
+st.write(sorted(feat_importances.items(), key=lambda x: x[1], reverse=True))
