@@ -16,7 +16,7 @@ url = "https://storage.googleapis.com/info_450/IndividualAssistanceHousingRegist
 filename = "fema_disaster_data.csv"
 
 start = time.time()
-st.write(f"Downloading {filename}...")
+print(f"Downloading {filename}...")
 urllib.request.urlretrieve(url, filename)
 
 import pandas as pd
